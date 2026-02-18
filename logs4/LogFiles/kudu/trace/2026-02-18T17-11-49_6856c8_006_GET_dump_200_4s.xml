@@ -1,0 +1,4 @@
+<step title="Incoming Request" date="2026-02-18T17:11:49.945" instance="6856c8" url="/dump" method="GET" type="request" pid="771,1,18" Host="copilot-terraform-agent.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (MSI)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="e38d5152-0cec-11f1-9b1d-c0a810f2153d" X-ARR-LOG-ID="e38d5152-0cec-11f1-9b1d-c0a810f2153d" CLIENT-IP="108.142.230.59:30158" X-SITE-DEPLOYMENT-ID="copilot-terraform-agent" WAS-DEFAULT-HOSTNAME="copilot-terraform-agent.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-Client-IP="108.142.230.59" X-Client-Port="30158" >
+  <step title="Cleanup Xml Logs" date="2026-02-18T17:11:50.073" /><!-- duration: 234ms -->
+  <step title="Outgoing response" date="2026-02-18T17:11:53.475" type="response" statusCode="200" statusText="OK" /><!-- duration: 11ms -->
+</step><!-- duration: 3581ms -->

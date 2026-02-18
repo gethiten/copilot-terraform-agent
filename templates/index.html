@@ -11,210 +11,271 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             color: #fff;
+        }
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .chat-header {
             padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { 
-            text-align: center; 
-            margin-bottom: 10px;
-            font-size: 2rem;
+        .chat-header h2 {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
         }
-        .subtitle { 
-            text-align: center; 
-            color: #888; 
-            margin-bottom: 30px;
+        .chat-header p {
+            font-size: 0.875rem;
+            color: #888;
         }
+        .chat-embed {
+            flex: 1;
+            background: #fff;
+        }
+        .chat-embed iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .chat-placeholder {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            color: #888;
+        }
+        .chat-placeholder code {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.75rem;
+            max-width: 100%;
+            overflow-x: auto;
+            text-align: left;
+            color: #10b981;
+        }
+        .side-panel {
+            width: 400px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .subtitle { color: #888; font-size: 0.875rem; margin-bottom: 20px; }
         .badge {
             display: inline-block;
             background: #6366f1;
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.75rem;
-            margin-left: 10px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            vertical-align: middle;
         }
         .card {
             background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
             border: 1px solid rgba(255,255,255,0.1);
         }
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 500;
-            color: #ccc;
+        .card h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #fff;
         }
+        label { display: block; margin-bottom: 6px; font-weight: 500; color: #aaa; font-size: 0.875rem; }
         textarea, input, select {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 12px;
             border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
+            border-radius: 6px;
             background: rgba(0,0,0,0.3);
             color: #fff;
-            font-size: 1rem;
-            margin-bottom: 20px;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
         }
-        textarea { height: 120px; resize: vertical; }
+        textarea { height: 150px; resize: vertical; font-family: monospace; }
         textarea:focus, input:focus, select:focus {
             outline: none;
             border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
-        .row { display: flex; gap: 20px; }
-        .row > div { flex: 1; }
         button {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             border: none;
-            padding: 14px 28px;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3);
         }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .result {
-            margin-top: 20px;
-            padding: 20px;
+            margin-top: 12px;
+            padding: 12px;
             background: rgba(0,0,0,0.3);
-            border-radius: 8px;
+            border-radius: 6px;
+            font-size: 0.875rem;
             display: none;
         }
         .result.show { display: block; }
-        .result.success { border-left: 4px solid #10b981; }
-        .result.error { border-left: 4px solid #ef4444; }
-        pre {
-            background: rgba(0,0,0,0.5);
-            padding: 16px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.875rem;
-            max-height: 400px;
-            overflow-y: auto;
+        .result.success { border-left: 3px solid #10b981; }
+        .result.error { border-left: 3px solid #ef4444; }
+        .result a { color: #6366f1; }
+        .status { 
+            font-size: 0.75rem; 
+            color: #888; 
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            margin-bottom: 12px;
         }
-        .templates {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .template-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px;
-            text-align: left;
-            font-size: 0.875rem;
-        }
-        .template-btn:hover {
-            background: rgba(99, 102, 241, 0.2);
-            border-color: #6366f1;
-        }
+        .status .ok { color: #10b981; }
+        .status .error { color: #ef4444; }
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: #fff;
             animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
+            margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        a { color: #6366f1; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        .help-text {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: -8px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; }
+            .chat-panel { height: 50vh; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .side-panel { width: 100%; height: 50vh; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 Copilot Terraform Agent <span class="badge">Azure OpenAI</span></h1>
-        <p class="subtitle">Generate Azure infrastructure code with AI - Powered by Copilot Studio</p>
-        
-        <div class="card">
-            <label>Quick Templates</label>
-            <div class="templates" id="templates"></div>
-            
-            <label for="prompt">What infrastructure do you need?</label>
-            <textarea id="prompt" placeholder="Example: Create an Azure Storage Account with blob container for storing backups"></textarea>
-            
-            <div class="row">
-                <div>
-                    <label for="location">Azure Region</label>
-                    <select id="location">
-                        <option value="eastus">East US</option>
-                        <option value="eastus2">East US 2</option>
-                        <option value="westus2">West US 2</option>
-                        <option value="westeurope">West Europe</option>
-                        <option value="northeurope">North Europe</option>
-                        <option value="centralus">Central US</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="resourceGroup">Resource Group (optional)</label>
-                    <input type="text" id="resourceGroup" placeholder="Leave empty to auto-generate">
+    <div class="layout">
+        <!-- Left: Copilot Studio Chat -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h2>💬 Chat with Terraform Agent</h2>
+                <p>Ask the agent to generate Terraform for any Azure resource</p>
+            </div>
+            <div class="chat-embed" id="chatEmbed">
+                <!-- PASTE YOUR COPILOT STUDIO EMBED IFRAME HERE -->
+                <div class="chat-placeholder" id="placeholder">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">🤖</div>
+                    <h3 style="color: #fff; margin-bottom: 8px;">Copilot Studio Not Connected</h3>
+                    <p>To embed your agent, edit this file and replace this placeholder with your iframe code:</p>
+                    <code>
+&lt;iframe<br>
+&nbsp;&nbsp;src="https://copilotstudio.microsoft.com/environments/YOUR_ENV/bots/YOUR_BOT/webchat?__version__=2"<br>
+&nbsp;&nbsp;frameborder="0"<br>
+&nbsp;&nbsp;style="width: 100%; height: 100%;"&gt;<br>
+&lt;/iframe&gt;
+                    </code>
+                    <p style="margin-top: 20px; font-size: 0.875rem;">
+                        Get embed code: Copilot Studio → Your Agent → Channels → Custom website
+                    </p>
                 </div>
             </div>
-            
-            <label>
-                <input type="checkbox" id="createPR" checked style="width: auto; margin-right: 8px;">
-                Create GitHub Pull Request
-            </label>
-            <br><br>
-            
-            <button id="generateBtn" onclick="generate()">
-                ✨ Generate Terraform
-            </button>
-            
-            <div id="result" class="result"></div>
         </div>
         
-        <div class="card" style="text-align: center; padding: 20px;">
-            <p style="color: #888; font-size: 0.875rem;">
-                API Endpoint: <code>/api/copilot/generate</code> | 
-                <a href="/api/health" target="_blank">Health Check</a> | 
-                <a href="/api/templates" target="_blank">Templates</a>
-            </p>
+        <!-- Right: Manual Commit -->
+        <div class="side-panel">
+            <h1>📤 Commit Code <span class="badge">Manual</span></h1>
+            <p class="subtitle">Paste Terraform code to commit directly to GitHub</p>
+            
+            <div class="status" id="status">Checking GitHub connection...</div>
+            
+            <div class="card">
+                <h3>Terraform Code</h3>
+                <textarea id="terraform_code" placeholder="resource &quot;azurerm_resource_group&quot; &quot;example&quot; {&#10;  name     = &quot;example-resources&quot;&#10;  location = &quot;East US&quot;&#10;}"></textarea>
+                <p class="help-text">Paste code generated by Copilot Studio or write your own</p>
+                
+                <label for="description">Description</label>
+                <input type="text" id="description" placeholder="e.g., Add storage account for logs">
+                
+                <label for="location">Azure Region</label>
+                <select id="location">
+                    <option value="eastus">East US</option>
+                    <option value="eastus2">East US 2</option>
+                    <option value="westus2">West US 2</option>
+                    <option value="westeurope">West Europe</option>
+                    <option value="northeurope">North Europe</option>
+                </select>
+                
+                <label style="margin-bottom: 16px;">
+                    <input type="checkbox" id="createPR" checked style="width: auto; margin-right: 8px;">
+                    Create Pull Request
+                </label>
+                
+                <button id="commitBtn" onclick="commitCode()">
+                    📤 Commit to GitHub
+                </button>
+                
+                <div id="result" class="result"></div>
+            </div>
+            
+            <div class="card" style="padding: 12px; text-align: center;">
+                <p style="color: #666; font-size: 0.75rem;">
+                    <a href="/api/health" target="_blank">Health</a> • 
+                    <a href="/api/templates" target="_blank">Templates</a> • 
+                    API: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">/api/copilot/generate</code>
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
-        // Load templates
-        fetch('/api/templates')
+        // Check GitHub status
+        fetch('/api/health')
             .then(r => r.json())
             .then(data => {
-                const container = document.getElementById('templates');
-                data.templates.forEach(t => {
-                    const btn = document.createElement('button');
-                    btn.className = 'template-btn';
-                    btn.innerHTML = `<strong>${t.name}</strong><br><small>${t.description}</small>`;
-                    btn.onclick = () => document.getElementById('prompt').value = t.prompt;
-                    container.appendChild(btn);
-                });
+                const status = document.getElementById('status');
+                if (data.github_configured) {
+                    status.innerHTML = 'GitHub: <span class="ok">✅ Connected</span>';
+                } else {
+                    status.innerHTML = 'GitHub: <span class="error">❌ Not configured</span>';
+                    document.getElementById('commitBtn').disabled = true;
+                }
+            })
+            .catch(() => {
+                document.getElementById('status').innerHTML = 'Status: <span class="error">❌ API unavailable</span>';
             });
-
-        async function generate() {
-            const btn = document.getElementById('generateBtn');
+        
+        async function commitCode() {
+            const btn = document.getElementById('commitBtn');
             const result = document.getElementById('result');
             
-            const prompt = document.getElementById('prompt').value.trim();
-            if (!prompt) {
-                alert('Please enter a prompt');
+            const terraform_code = document.getElementById('terraform_code').value.trim();
+            if (!terraform_code) {
+                alert('Please enter Terraform code');
                 return;
             }
             
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Generating...';
+            btn.innerHTML = '<span class="loading"></span> Committing...';
             result.className = 'result';
             result.style.display = 'none';
             
@@ -223,9 +284,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: prompt,
+                        terraform_code: terraform_code,
+                        description: document.getElementById('description').value || 'Infrastructure deployment',
                         location: document.getElementById('location').value,
-                        resource_group_name: document.getElementById('resourceGroup').value,
                         create_pr: document.getElementById('createPR').checked
                     })
                 });
@@ -233,34 +294,23 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    let html = `<h3 style="color: #10b981; margin-bottom: 16px;">✅ ${data.message}</h3>`;
-                    
+                    let html = `<strong style="color: #10b981;">✅ ${data.message}</strong>`;
                     if (data.pr_url) {
-                        html += `<p style="margin-bottom: 16px;"><strong>Pull Request:</strong> <a href="${data.pr_url}" target="_blank">${data.pr_url}</a></p>`;
+                        html += `<br><a href="${data.pr_url}" target="_blank">View Pull Request →</a>`;
                     }
-                    
-                    html += `<h4 style="margin: 16px 0 8px;">Generated Terraform:</h4>`;
-                    html += `<pre>${escapeHtml(data.terraform_code)}</pre>`;
-                    
                     result.innerHTML = html;
                     result.className = 'result show success';
                 } else {
-                    result.innerHTML = `<h3 style="color: #ef4444;">❌ Error</h3><p>${data.error}</p>`;
+                    result.innerHTML = `<strong style="color: #ef4444;">❌ Error:</strong> ${data.error}`;
                     result.className = 'result show error';
                 }
             } catch (e) {
-                result.innerHTML = `<h3 style="color: #ef4444;">❌ Error</h3><p>${e.message}</p>`;
+                result.innerHTML = `<strong style="color: #ef4444;">❌ Error:</strong> ${e.message}`;
                 result.className = 'result show error';
             }
             
             btn.disabled = false;
-            btn.innerHTML = '✨ Generate Terraform';
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            btn.innerHTML = '📤 Commit to GitHub';
         }
     </script>
 </body>

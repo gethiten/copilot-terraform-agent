@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "https://your-app.azurewebsites.net",
+      "url": "https://copilot-terraform-agent.azurewebsites.net",
       "description": "Production server"
     }
   ],

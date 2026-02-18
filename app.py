@@ -1,8 +1,8 @@
 """
-Copilot Terraform Agent - Copilot Studio Backend
-This app provides API endpoints (actions) for Microsoft Copilot Studio agent.
-Copilot Studio handles Terraform generation; this backend commits code to GitHub.
-No Azure OpenAI or Foundry dependency - all AI is handled by Copilot Studio.
+Copilot Terraform Agent - Dual Mode Backend
+This app provides API endpoints for:
+1. Microsoft Copilot Studio agent (receives pre-generated code)
+2. Web UI with Azure OpenAI (generates Terraform from prompts)
 """
 
 import os
@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
+from openai import AzureOpenAI
 
 # Load environment variables
 load_dotenv()
@@ -23,9 +24,89 @@ app = Flask(__name__)
 # CONFIGURATION
 # =============================================================================
 
+# Azure OpenAI Configuration (optional - for web UI generation)
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
+
+# GitHub Configuration
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_URL = os.getenv("GITHUB_REPO_URL")
 OUTPUT_DIRECTORY = os.getenv("OUTPUT_DIRECTORY", "generated_terraform")
+
+# Initialize Azure OpenAI client (optional)
+openai_client = None
+if AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY:
+    openai_client = AzureOpenAI(
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        api_key=AZURE_OPENAI_API_KEY,
+        api_version=AZURE_OPENAI_API_VERSION
+    )
+
+# =============================================================================
+# TERRAFORM GENERATION PROMPT
+# =============================================================================
+
+TERRAFORM_SYSTEM_PROMPT = """You are an expert Azure Infrastructure Engineer and Terraform specialist.
+Your role is to generate production-ready Terraform code for Azure resources.
+
+## OUTPUT FORMAT
+You MUST return ONLY valid Terraform code blocks. Use this exact structure:
+
+```hcl
+# providers.tf content here
+```
+
+```hcl
+# variables.tf content here
+```
+
+```hcl
+# main.tf content here
+```
+
+```hcl
+# outputs.tf content here
+```
+
+## CRITICAL RULES
+1. Always use AzureRM provider version ~> 4.0
+2. Include proper variable definitions with descriptions
+3. Use data sources for existing resources (never create duplicates)
+4. Add meaningful outputs for created resources
+5. Follow Azure naming conventions (lowercase, hyphens)
+6. Include tags for resource management
+7. Use locals for computed values
+
+## PROVIDER CONFIGURATION
+```hcl
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+```
+
+## VARIABLE PATTERNS
+- Always include: subscription_id, location, resource_group_name
+- Use sensible defaults where appropriate
+- Add validation blocks for critical variables
+
+## RESOURCE NAMING
+Use format: {prefix}-{resource_type}-{environment}
+Example: tfgen-storage-prod
+
+Generate clean, production-ready Terraform code based on the user's requirements."""
 
 
 # =============================================================================
@@ -201,19 +282,118 @@ def create_github_pr(terraform_blocks: dict, prompt: str, branch_name: str = Non
 
 
 # =============================================================================
-# API ENDPOINTS FOR COPILOT STUDIO
+# API ENDPOINTS
 # =============================================================================
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint for Copilot Studio custom connector."""
+    """Health check endpoint."""
     return jsonify({
         "status": "healthy",
         "service": "Copilot Terraform Agent",
-        "version": "2.0.0",
-        "description": "Backend actions for Copilot Studio Terraform agent",
+        "version": "3.0.0",
+        "description": "Dual-mode: Web UI (Azure OpenAI) + Copilot Studio",
+        "azure_openai_configured": openai_client is not None,
         "github_configured": bool(GITHUB_TOKEN and GITHUB_REPO_URL)
     })
+
+
+@app.route('/api/generate', methods=['POST'])
+def generate_terraform():
+    """
+    Generate Terraform code using Azure OpenAI (for Web UI).
+    
+    Request Body:
+    {
+        "prompt": "Create a storage account with blob container",
+        "location": "eastus",
+        "resource_group_name": "my-rg",
+        "create_pr": true
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or not data.get('prompt'):
+            return jsonify({
+                "success": False,
+                "error": "Prompt is required"
+            }), 400
+        
+        if not openai_client:
+            return jsonify({
+                "success": False,
+                "error": "Azure OpenAI is not configured. Set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY."
+            }), 500
+        
+        prompt = data['prompt']
+        location = data.get('location', 'eastus')
+        resource_group_name = data.get('resource_group_name', '')
+        create_pr = data.get('create_pr', True)
+        
+        # Enhance prompt with context
+        enhanced_prompt = f"{prompt}\n\nLocation: {location}"
+        if resource_group_name:
+            enhanced_prompt += f"\nResource Group: {resource_group_name}"
+        
+        print(f"\n{'='*60}")
+        print("🤖 Azure OpenAI - Terraform Generation Request")
+        print(f"{'='*60}")
+        print(f"Prompt: {prompt}")
+        print(f"Location: {location}")
+        print(f"{'='*60}\n")
+        
+        # Call Azure OpenAI
+        response = openai_client.chat.completions.create(
+            model=AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": TERRAFORM_SYSTEM_PROMPT},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=4000
+        )
+        
+        terraform_response = response.choices[0].message.content
+        
+        # Parse the response into files
+        terraform_blocks = parse_terraform_blocks(terraform_response)
+        
+        # Save to disk
+        saved_path = save_terraform_files(terraform_blocks, prompt)
+        print(f"💾 Saved to: {saved_path}")
+        
+        # Create PR if requested
+        pr_result = {}
+        if create_pr:
+            pr_result = create_github_pr(terraform_blocks, prompt)
+            if pr_result.get('success'):
+                print(f"✅ PR created: {pr_result['pr_url']}")
+        
+        # Build response message
+        if pr_result.get('success'):
+            message = f"✅ Terraform code generated and PR created for review."
+        else:
+            message = f"✅ Terraform code generated successfully."
+        
+        return jsonify({
+            "success": True,
+            "terraform_code": terraform_response,
+            "files": terraform_blocks,
+            "saved_path": saved_path,
+            "pr_url": pr_result.get('pr_url'),
+            "pr_number": pr_result.get('pr_number'),
+            "message": message
+        })
+        
+    except Exception as e:
+        print(f"⚠️ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 
 @app.route('/api/copilot/generate', methods=['POST'])
@@ -436,11 +616,15 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     print("="*60)
-    print("🤖 Copilot Terraform Agent (Copilot Studio Backend)")
+    print("🤖 Copilot Terraform Agent (Dual Mode)")
     print("="*60)
-    print("Mode: Copilot Studio handles AI/Terraform generation")
+    print(f"Azure OpenAI: {'✅ Configured' if openai_client else '❌ Not configured (Web UI generation disabled)'}")
     print(f"GitHub: {'✅ Configured' if GITHUB_TOKEN else '❌ Not configured'}")
     print(f"Listening on: http://{host}:{port}")
+    print("="*60)
+    print("Endpoints:")
+    print("  /api/generate       - Generate Terraform (Azure OpenAI)")
+    print("  /api/copilot/generate - Commit Terraform (Copilot Studio)")
     print("="*60)
     
     app.run(host=host, port=port, debug=debug)
