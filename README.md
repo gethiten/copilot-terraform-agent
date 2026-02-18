@@ -1,34 +1,68 @@
 # Copilot Terraform Agent
 
-🤖 AI-powered Terraform code generator for Microsoft Copilot Studio
+🤖 Backend actions for Copilot Studio agent that generates Azure Terraform code
 
 ## Overview
 
-This is a lightweight API that generates Azure Terraform code using Azure OpenAI. It's designed to work with Microsoft Copilot Studio as a backend service.
+This is a lightweight backend API for Microsoft Copilot Studio. **Copilot Studio handles all AI/Terraform generation** using its built-in GPT capabilities. This backend simply provides actions to commit code to GitHub and create Pull Requests.
+
+**No Azure OpenAI or Foundry dependency required!**
 
 ## Architecture
 
 ```
-┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
-│   Copilot Studio    │ ──── │   This API          │ ──── │   Azure OpenAI      │
-│   (Teams/Web)       │      │   (Flask App)       │      │   (GPT-4o)          │
-└─────────────────────┘      └─────────────────────┘      └─────────────────────┘
-                                      │
-                                      ▼
-                             ┌─────────────────────┐
-                             │   GitHub PR         │
-                             │   (Optional)        │
-                             └─────────────────────┘
+┌────────────────────────────────────────┐
+│   Copilot Studio (Teams/Web)           │
+│   - Built-in GPT generates Terraform   │
+│   - Conversational UI                  │
+└────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌────────────────────────────────────────┐
+│   This Backend API (Flask)             │
+│   - Receives generated Terraform code  │
+│   - Commits to GitHub                  │
+│   - Creates Pull Requests              │
+└────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌────────────────────────────────────────┐
+│   GitHub Repository                    │
+│   - Review PR                          │
+│   - Merge to deploy                    │
+└────────────────────────────────────────┘
 ```
 
-## Key Difference from Foundry Agent
+## Key Benefits
 
-| Feature | This App (Copilot Agent) | Foundry App |
-|---------|--------------------------|-------------|
-| AI Backend | Azure OpenAI directly | Azure AI Foundry Agent |
-| Dependencies | Minimal (openai SDK) | Azure AI Projects SDK |
-| Complexity | Simple | More features |
-| Use Case | Copilot Studio integration | Full web app |
+| Feature | This App (Copilot Studio Native) |
+|---------|----------------------------------|
+| AI Backend | Copilot Studio's built-in GPT (no extra cost) |
+| Dependencies | Minimal (flask, requests only) |
+| Azure OpenAI | Not required |
+| Foundry | Not required |
+| Use Case | Teams integration, conversational UI |
+
+## Two-App Deployment
+
+This is a **separate deployment** from the Foundry Agent app. You can run both side-by-side:
+
+| App | Resource Group | AI Backend | Use Case |
+|-----|----------------|------------|----------|
+| **Foundry Agent** | `rg-foundry-terraform` | Azure AI Foundry + Azure OpenAI | Custom web app, agent tools |
+| **Copilot Agent** (this) | `rg-copilot-terraform` | Copilot Studio GPT | Teams, conversational UI |
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         YOUR AZURE SUBSCRIPTION                             │
+├─────────────────────────────────┬───────────────────────────────────────────┤
+│  rg-foundry-terraform           │  rg-copilot-terraform                     │
+│  ├── App Service                │  ├── App Service                          │
+│  ├── Azure OpenAI               │  └── (No Azure OpenAI needed)             │
+│  └── AI Foundry Project         │                                           │
+│                                 │  Uses: Copilot Studio built-in GPT        │
+└─────────────────────────────────┴───────────────────────────────────────────┘
+```
 
 ## Quick Start
 
@@ -59,13 +93,10 @@ notepad .env
 ```
 
 Required settings:
-- `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint
-- `AZURE_OPENAI_API_KEY` - Your Azure OpenAI API key
-- `AZURE_OPENAI_DEPLOYMENT` - Model deployment name (e.g., gpt-4o)
-
-Optional (for PR creation):
-- `GITHUB_TOKEN` - GitHub personal access token
+- `GITHUB_TOKEN` - GitHub personal access token (for creating PRs)
 - `GITHUB_REPO_URL` - Your repository URL
+
+**Note:** No Azure OpenAI settings needed! Copilot Studio handles AI generation.
 
 ### 3. Run Locally
 
@@ -81,10 +112,10 @@ Open http://localhost:5001 in your browser.
 # Health check
 curl http://localhost:5001/api/health
 
-# Generate Terraform
+# Commit Terraform (code generated by Copilot Studio)
 curl -X POST http://localhost:5001/api/copilot/generate \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Create a storage account", "location": "eastus"}'
+  -d '{"terraform_code": "terraform { ... }", "description": "Create a storage account", "location": "eastus"}'
 ```
 
 ## API Endpoints
@@ -92,40 +123,47 @@ curl -X POST http://localhost:5001/api/copilot/generate \
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Health check |
-| `/api/copilot/generate` | POST | Generate Terraform code |
+| `/api/copilot/generate` | POST | Commit Terraform code to GitHub (receives code from Copilot Studio) |
 | `/api/copilot/status/{pr}` | GET | Check PR status |
 | `/api/templates` | GET | List available templates |
 
 ## Copilot Studio Integration
 
-### 1. Deploy to Azure
+### 1. Deploy to Azure (New Resource Group)
 
 ```bash
+# Create NEW resource group (separate from Foundry app)
+az group create --name rg-copilot-terraform --location eastus
+
+# Create App Service plan
+az appservice plan create --name plan-copilot-terraform \
+  --resource-group rg-copilot-terraform \
+  --sku B1 --is-linux
+
 # Create App Service
 az webapp create --name copilot-terraform-agent \
-  --resource-group rg-copilot \
-  --plan my-plan \
+  --resource-group rg-copilot-terraform \
+  --plan plan-copilot-terraform \
   --runtime "PYTHON:3.11"
 
-# Configure settings
+# Configure settings (only GitHub - no Azure OpenAI needed!)
 az webapp config appsettings set --name copilot-terraform-agent \
-  --resource-group rg-copilot \
-  --settings AZURE_OPENAI_ENDPOINT=... AZURE_OPENAI_API_KEY=...
+  --resource-group rg-copilot-terraform \
+  --settings GITHUB_TOKEN=ghp_xxx GITHUB_REPO_URL=https://github.com/your-org/terraform-repo
 ```
 
-### 2. Create Custom Connector
-
-1. Go to [Power Automate](https://make.powerautomate.com)
-2. Navigate to **Custom connectors**
-3. Import `docs/copilot-openapi.json`
-4. Update the host to your App Service URL
-
-### 3. Create Copilot Studio Agent
+### 2. Add Action to Copilot Studio
 
 1. Go to [Copilot Studio](https://copilotstudio.microsoft.com)
-2. Create new copilot
-3. Add topic with trigger phrases like "create infrastructure"
-4. Call the custom connector action
+2. Create new agent
+3. Go to **Actions** → **+ Add an action** → **Connector action**
+4. Import `docs/copilot-openapi.json`
+5. Configure host to your App Service URL
+6. Add instructions to agent (see setup guide)
+
+**No Power Automate flows needed!** The agent calls your API directly via Actions.
+
+See [COPILOT_STUDIO_SETUP.md](docs/COPILOT_STUDIO_SETUP.md) for detailed instructions.
 
 ## Files
 
@@ -138,7 +176,8 @@ copilot-terraform-agent/
 ├── templates/
 │   └── index.html           # Web interface
 └── docs/
-    └── copilot-openapi.json # OpenAPI spec for Copilot
+    ├── copilot-openapi.json # OpenAPI spec for Actions
+    └── COPILOT_STUDIO_SETUP.md # Detailed setup guide
 ```
 
 ## License
